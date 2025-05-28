@@ -71,8 +71,9 @@ const std::string kI420FragmentShaderString = R"(
 #endif
 
 std::shared_ptr<SourceRawData> SourceRawData::Create() {
-  auto ret = std::shared_ptr<SourceRawData>(new SourceRawData());
+  std::shared_ptr<SourceRawData> ret;
   gpupixel::GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
+    ret = std::shared_ptr<SourceRawData>(new SourceRawData());
     if (!ret->Init()) {
       return ret.reset();
     }

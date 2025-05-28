@@ -15,10 +15,11 @@
 #include <string>
 
 #include "gpupixel/sink/sink.h"
-
+#if __OBJC__
 #if defined(GPUPIXEL_IOS) || defined(GPUPIXEL_MAC)
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
+#endif
 #endif
 
 namespace gpupixel {

@@ -9,6 +9,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
 BUILD_DIR="${PROJECT_DIR}/build/macos"
 INSTALL_DIR="${PROJECT_DIR}/output"
+BUILD_CONFIG=${BUILD_CONFIG:="Release"}
 
 # Create build directory
 mkdir -p "${BUILD_DIR}" || {
@@ -17,7 +18,7 @@ mkdir -p "${BUILD_DIR}" || {
 }
 
 # Detect processor architecture
-ARCH=$(uname -m)
+ARCH=${ARCH:=$(uname -m)}
 
 # Use absolute path for toolchain
 CMAKE_TOOLCHAIN="${PROJECT_DIR}/cmake/ios.toolchain.cmake"
@@ -30,7 +31,7 @@ if [ "$ARCH" = "x86_64" ]; then
     cmake -B "${BUILD_DIR}" -S "${PROJECT_DIR}" \
         -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN}" \
         -DPLATFORM=MAC \
-        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
         -DGPUPIXEL_BUILD_DESKTOP_DEMO=ON \
         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" || {
         echo "Error: Intel platform project configuration failed"
@@ -42,7 +43,7 @@ else
     cmake -B "${BUILD_DIR}" -S "${PROJECT_DIR}" \
         -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN}" \
         -DPLATFORM=MAC_ARM64 \
-        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
         -DGPUPIXEL_BUILD_DESKTOP_DEMO=ON \
         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" || {
         echo "Error: ARM platform project configuration failed"
@@ -52,7 +53,7 @@ fi
 
 # Build project - Using multi-threaded compilation
 echo "Building macOS project..."
-cmake --build "${BUILD_DIR}" --config Release --parallel $(sysctl -n hw.ncpu) || {
+cmake --build "${BUILD_DIR}" --config ${BUILD_CONFIG} --parallel $(sysctl -n hw.ncpu) || {
     echo "Error: Project build failed"
     exit 3
 }

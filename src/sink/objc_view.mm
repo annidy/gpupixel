@@ -171,9 +171,7 @@ using namespace gpupixel;
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT,
                                  &framebufferHeight);
 
-    [self performSelectorOnMainThread:@selector(updateDisplayVertices)
-                           withObject:nil
-                        waitUntilDone:NO];
+    [self updateDisplayVertices];
 #else
     // Perhaps I'll use an FBO at some time later, but for now will render
     // directly to the screen
@@ -297,9 +295,7 @@ using namespace gpupixel;
        !(lastFramebuffer->GetWidth() == newInputFramebuffer->GetWidth() &&
          lastFramebuffer->GetHeight() == newInputFramebuffer->GetHeight() &&
          lastInputRotation == rotation))) {
-    [self performSelectorOnMainThread:@selector(updateDisplayVertices)
-                           withObject:nil
-                        waitUntilDone:NO];
+    [self updateDisplayVertices];
   }
 }
 
@@ -307,7 +303,9 @@ using namespace gpupixel;
 {
   if (_fillMode != newValue) {
     _fillMode = newValue;
-    [self updateDisplayVertices];
+    gpupixel::GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
+      [self updateDisplayVertices];
+    });
   }
 }
 

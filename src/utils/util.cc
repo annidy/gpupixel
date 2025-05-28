@@ -40,7 +40,7 @@ static bool s_isAppActive = false;
     [[NSNotificationCenter defaultCenter]
         addObserver:self
            selector:@selector(applicationStateChanged:)
-               name:UIApplicationWillResignActiveNotification
+               name:UIApplicationDidEnterBackgroundNotification
              object:nil];
     [[NSNotificationCenter defaultCenter]
         addObserver:self
@@ -53,7 +53,7 @@ static bool s_isAppActive = false;
 + (void)applicationStateChanged:(NSNotification*)notification {
   @synchronized(self) {
     if ([notification.name
-            isEqualToString:UIApplicationWillResignActiveNotification]) {
+            isEqualToString:UIApplicationDidEnterBackgroundNotification]) {
       s_isAppActive = false;
     } else {
       s_isAppActive = true;

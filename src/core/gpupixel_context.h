@@ -77,6 +77,7 @@ class GPUPIXEL_API GPUPixelContext {
 #elif defined(GPUPIXEL_WASM)
   EMSCRIPTEN_WEBGL_CONTEXT_HANDLE wasm_context_;
 #endif
+  bool invalid_ = false;
 };
 
 }  // namespace gpupixel

@@ -394,11 +394,7 @@ void BeautyFaceUnitFilter::SetBlurAlpha(float blur_alpha) {
 }
 
 void BeautyFaceUnitFilter::SetWhite(float white) {
-#if defined(GPUPIXEL_MAC)
-  white_balance_ = white / 10;
-#else
   white_balance_ = white;
-#endif
 }
 
 }  // namespace gpupixel

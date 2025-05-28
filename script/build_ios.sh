@@ -9,6 +9,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
 BUILD_DIR="${PROJECT_DIR}/build/ios"
 INSTALL_DIR="${PROJECT_DIR}/output"
+BUILD_CONFIG=${BUILD_CONFIG:="Release"}
  
 # Create build directory
 mkdir -p "${BUILD_DIR}" || {
@@ -24,7 +25,7 @@ echo "Configuring iOS project..."
 cmake -B "${BUILD_DIR}" -S "${PROJECT_DIR}" \
   -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN}" \
   -DPLATFORM=OS64 \
-  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
   -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" || {
   echo "Error: Project configuration failed"
   exit 2
@@ -32,14 +33,14 @@ cmake -B "${BUILD_DIR}" -S "${PROJECT_DIR}" \
 
 # Build project - Using multi-threaded compilation
 echo "Building iOS project..."
-cmake --build "${BUILD_DIR}" --config Release --parallel $(sysctl -n hw.ncpu) || {
+cmake --build "${BUILD_DIR}" --config ${BUILD_CONFIG} --parallel $(sysctl -n hw.ncpu) || {
   echo "Error: Project build failed"
   exit 3
 }
 
 # Install to output directory
 echo "Installing to output directory..."
-cmake --install "${BUILD_DIR}" --config Release || {
+cmake --install "${BUILD_DIR}" --config ${BUILD_CONFIG} || {
   echo "Error: Project installation failed"
   exit 4
 }

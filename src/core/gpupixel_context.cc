@@ -55,6 +55,7 @@ void GPUPixelContext::Destroy() {
 void GPUPixelContext::Init() {
   SyncRunWithContext([=] {
     LOG_INFO("Initializing GPUPixelContext");
+    invalid_ = true;
     this->CreateContext();
   });
 }
@@ -228,6 +229,7 @@ void GPUPixelContext::CreateContext() {
   emscripten_webgl_make_context_current(wasm_context_);
   LOG_INFO("WebGL context created successfully");
 #endif
+  invalid_ = false;
 }
 
 void GPUPixelContext::UseAsCurrent() {
@@ -320,6 +322,9 @@ void GPUPixelContext::SyncRunWithContext(std::function<void(void)> task) {
 #else
   LOG_TRACE("Running task on task queue");
   task_queue_->runTask([=]() {
+    if (invalid_) {
+      return;
+    }
     UseAsCurrent();
     task();
   });

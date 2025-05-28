@@ -337,6 +337,10 @@ if(WIN32)
   target_compile_options(
     ${gpupixel_libs_name}
     PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
+
+  add_custom_command(TARGET ${gpupixel_libs_name} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:marsface,IMPORTED_LOCATION> ${CMAKE_BINARY_DIR}/out/lib
+  )
 endif()
 
 if(APPLE)
