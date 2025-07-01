@@ -49,48 +49,13 @@
 ## Effects Preview
 
 https://github.com/user-attachments/assets/6b760fa6-e28f-4428-bfca-dec54a4e82d8
-
-## Features
-
-✨ Features comparison between **GPUPixel**, **GPUImage**, and **Android-GPUImage**:
-
-✅: Supported | ❌: Not supported | ✏️: Planning
-
-|                       | [GPUPixel](https://github.com/pixpark/gpupixel) | [GPUImage](https://github.com/BradLarson/GPUImage) | [Android-GPUImage](https://github.com/cats-oss/android-gpuimage) |
-| :-------------------- | :---------------------------------------------: | :------------------------------------------------: | :----------------------------------------------------------: |
-| **Filters:**          |                        ✅                        |                         ❌                          |                              ❌                               |
-| Skin Smoothing Filter |                        ✅                        |                         ❌                          |                              ❌                               |
-| Skin Whitening Filter |                        ✅                        |                         ❌                          |                              ❌                               |
-| Face Slimming Filter  |                        ✅                        |                         ❌                          |                              ❌                               |
-| Big Eyes Filter       |                        ✅                        |                         ❌                          |                              ❌                               |
-| Lipstick Filter       |                        ✅                        |                         ❌                          |                              ❌                               |
-| Blush Filter          |                        ✅                        |                         ❌                          |                              ❌                               |
-| More Build in Filter  |                        ✅                        |                         ✅                          |                              ✅                               |
-| **Input Formats:**    |                                                 |                                                    |                                                              |
-| YUV420P(I420)         |                        ✅                        |                         ❌                          |                              ❌                               |
-| RGBA                  |                        ✅                        |                         ✅                          |                              ✅                               |
-| JPEG                  |                        ✅                        |                         ✅                          |                              ✅                               |
-| PNG                   |                        ✅                        |                         ✅                          |                              ✅                               |
-| NV21(for Android)     |                        ✏️                        |                         ❌                          |                              ❌                               |
-| **Output Formats:**   |                                                 |                                                    |                                                              |
-| RGBA                  |                        ✅                        |                         ✅                          |                              ✅                               |
-| YUV420P(I420)         |                        ✅                        |                         ❌                          |                              ❌                               |
-| **Platform:**         |                                                 |                                                    |                                                              |
-| iOS                   |                        ✅                        |                         ✅                          |                              ❌                               |
-| Mac                   |                        ✅                        |                         ✅                          |                              ❌                               |
-| Android               |                        ✅                        |                         ❌                          |                              ✅                               |
-| Win                   |                        ✅                        |                         ❌                          |                              ❌                               |
-| Linux                 |                        ✅                        |                         ❌                          |                              ❌                               |
-
-
-
+ 
 ## Before You Start
 ⭐ Star us on GitHub for notifications about new releases!
 
 ![](./docs/image/give-star.gif)
 
-
-
+ 
 ## Getting Started
 
 🔍 See the docs: [Introduction](https://gpupixel.pixpark.net/guide/build) | [Build](https://gpupixel.pixpark.net/guide/build) | [Demo](https://gpupixel.pixpark.net/guide/demo) | [Integration](https://gpupixel.pixpark.net/guide/integrated)
