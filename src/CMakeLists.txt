@@ -450,7 +450,6 @@ if(GPUPIXEL_ENABLE_FACE_DETECTOR)
                                                       vnn_kit
                                                       vnn_face)
   target_include_directories(${gpupixel_libs_name} PRIVATE ${VNN_INCLUDE_DIRS})
-  message(STATUS "VNN_INCLUDE_DIRS: ${VNN_INCLUDE_DIRS}")
 endif()
 
 if(GPUPIXEL_INSTALL)

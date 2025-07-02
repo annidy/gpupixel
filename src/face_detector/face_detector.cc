@@ -29,8 +29,9 @@ FaceDetector::FaceDetector() {
 #elif defined(GPUPIXEL_WIN) || defined(GPUPIXEL_MAC) || defined(GPUPIXEL_LINUX)
   auto model_path = path / "face_pc[1.0.0].vnnmodel";
 #endif
+  auto u8_path = model_path.u8string();
   const void* argv[] = {
-      model_path.string().c_str(),
+      u8_path.c_str(),
   };
 
   const int argc = sizeof(argv) / sizeof(argv[0]);
@@ -45,6 +46,7 @@ FaceDetector::~FaceDetector() {
 std::vector<float> FaceDetector::Detect(const uint8_t* data,
                     int width,
                     int height,
+                    int stride,
                     GPUPIXEL_MODE_FMT fmt,
                     GPUPIXEL_FRAME_TYPE type) {
   if(vnn_handle_ == 0) {
@@ -59,11 +61,15 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
   input.channels = 4;
   switch (type) {
     case GPUPIXEL_FRAME_TYPE_RGBA: {
-      input.pix_fmt = VNN_PIX_FMT_BGRA8888; 
+      input.pix_fmt = VNN_PIX_FMT_RGBA8888; 
     }
       break;
     case GPUPIXEL_FRAME_TYPE_YUVI420: {
       input.pix_fmt = VNN_PIX_FMT_YUVI420;
+    }
+      break;
+    case GPUPIXEL_FRAME_TYPE_BGRA: {
+      input.pix_fmt = VNN_PIX_FMT_BGRA8888;
     }
       break;
     default:

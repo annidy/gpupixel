@@ -14,6 +14,7 @@ ENDIF()
 
 # ---- vnn library configuration ----
 # Configure the face detection and tracking library for all platforms
+set(VNN_LIB_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS})
 if(GPUPIXEL_ENABLE_FACE_DETECTOR)
   set(VNN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/vnn/include PARENT_SCOPE)
   if(${CMAKE_SYSTEM_NAME} MATCHES "Android")
@@ -58,19 +59,20 @@ if(GPUPIXEL_ENABLE_FACE_DETECTOR)
 
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
   elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR ${CMAKE_SYSTEM_NAME} MATCHES "iOS")
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-      XCODE_ATTRIBUTE_PRODUCT_NAME ${PROJECT_NAME}
-      COMPILE_FLAGS "-x objective-c++"
-      FRAMEWORK TRUE
-      MACOSX_FRAMEWORK_IDENTIFIER net.pixpark.${PROJECT_NAME}
-      PRODUCT_BUNDLE_IDENTIFIER net.pixpark.${PROJECT_NAME}
-      CMAKE_XCODE_ATTRIBUTE_BUILT_PRODUCTS_DIR ${PROJECT_NAME}
-      MACOSX_FRAMEWORK_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
-      FRAMEWORK_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/
-      PUBLIC_HEADER "${EXPORT_HEADER}"
-      RESOURCE "${RESOURCE_FILES}"
-      LINK_FLAGS "-Wl,-F${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}"
-    )
+    message(STATUS "Configuring vnn for ${VNN_LIB_DIRS}")
+    find_library(vnn_kit_lib vnn_kit_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
+    find_library(vnn_face_lib vnn_face_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
+    find_library(vnn_core_lib vnn_core_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
+    if(NOT vnn_kit_lib)
+      message(FATAL_ERROR "vnn_kit library not found in ${VNN_LIB_DIRS}")
+    endif()
+
+    add_library(vnn_kit SHARED IMPORTED GLOBAL)
+    set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION ${vnn_core_lib})
+    add_library(vnn_core SHARED IMPORTED GLOBAL)
+    set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION ${vnn_kit_lib})
+    add_library(vnn_face SHARED IMPORTED GLOBAL)
+    set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION ${vnn_face_lib})
   endif()
 
   # ---- Runtime library installation ----

@@ -469,7 +469,7 @@ void RenderFrame() {
 #ifdef GPUPIXEL_ENABLE_FACE_DETECTOR
   // Detect facial landmarks
   std::vector<float> landmarks = face_detector_->Detect(
-      buffer, width, height, GPUPIXEL_MODE_FMT_PICTURE,
+      buffer, width, height, width * 4, GPUPIXEL_MODE_FMT_PICTURE,
       GPUPIXEL_FRAME_TYPE_RGBA);
 
   if (!landmarks.empty()) {
