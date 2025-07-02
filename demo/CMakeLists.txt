@@ -56,7 +56,6 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
               delayimp
               glad::glad
               glfw::glfw
-              marsface::marsface
               gpupixel::gpupixel
               ghc::filesystem)
 
@@ -65,7 +64,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
       set_target_properties(
         ${GPL_APP_NAME}
         PROPERTIES LINK_FLAGS
-                   "/DELAYLOAD:gpupixel.dll /DELAYLOAD:mars-face-kit.dll")
+                   "/DELAYLOAD:gpupixel.dll")
     endif()
 
   else()

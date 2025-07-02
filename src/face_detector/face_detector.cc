@@ -7,8 +7,10 @@
 
 #include "gpupixel/face_detector/face_detector.h"
 #include <cassert>
-#include "mars_face_detector.h"
-#include "utils/filesystem.h"
+
+#include "vnn_kit.h"
+#include "vnn_face.h"
+#include "ghc/filesystem.hpp"
 #include "utils/logging.h"
 #include "utils/util.h"
 
@@ -19,93 +21,104 @@ std::shared_ptr<FaceDetector> FaceDetector::Create() {
 }
 
 FaceDetector::FaceDetector() {
-  mars_face_detector_ = mars_face_kit::MarsFaceDetector::CreateFaceDetector();
   auto path = Util::GetResourcePath() / "models";
 
-  if (fs::exists(path)) {
-    mars_face_detector_->Init(path.string());
-  } else {
-    LOG_ERROR("FaceDetector: models path not found: {}", path.string());
-    assert(false && "FaceDetector: models path not found");
-  }
+  VNN_SetLogLevel(VNN_LOG_LEVEL_ALL);
+#if defined(GPUPIXEL_IOS) || defined(GPUPIXEL_ANDROID)
+  auto model_path = path / "face_mobile[1.0.0].vnnmodel";
+#elif defined(GPUPIXEL_WIN) || defined(GPUPIXEL_MAC) || defined(GPUPIXEL_LINUX)
+  auto model_path = path / "face_pc[1.0.0].vnnmodel";
+#endif
+  const void* argv[] = {
+      model_path.string().c_str(),
+  };
+
+  const int argc = sizeof(argv) / sizeof(argv[0]);
+  VNN_Result ret = VNN_Create_Face(&vnn_handle_, argc, argv);
+}
+
+FaceDetector::~FaceDetector() {
+  if(vnn_handle_ > 0)
+    VNN_Destroy_Face(&vnn_handle_);
 }
 
 std::vector<float> FaceDetector::Detect(const uint8_t* data,
-                                        int width,
-                                        int height,
-                                        int stride,
-                                        GPUPIXEL_MODE_FMT fmt,
-                                        GPUPIXEL_FRAME_TYPE type) {
-  mars_face_kit::MarsImage image;
-  image.data = (uint8_t*)data;
-  image.width = width == stride / 4 ? width : stride / 4;
-  image.height = height;
-  if (type == GPUPIXEL_FRAME_TYPE_RGBA) {
-    image.pixel_format = mars_face_kit::PixelFormat::RGBA;
-  } else if (type == GPUPIXEL_FRAME_TYPE_BGRA) {
-    image.pixel_format = mars_face_kit::PixelFormat::BGRA;
+                    int width,
+                    int height,
+                    GPUPIXEL_MODE_FMT fmt,
+                    GPUPIXEL_FRAME_TYPE type) {
+  if(vnn_handle_ == 0) {
+    return {};
   }
-  image.width_step = width;
-  image.rotate_type = mars_face_kit::CLOCKWISE_ROTATE_0;
+  
+  VNN_Set_Face_Attr(vnn_handle_, "_use_278pts", &use_278pts);
 
-  std::vector<mars_face_kit::FaceDetectionInfo> face_info;
+  VNN_Image input;
+  input.width = width;
+  input.height = height;
+  input.channels = 4;
+  switch (type) {
+    case GPUPIXEL_FRAME_TYPE_RGBA: {
+      input.pix_fmt = VNN_PIX_FMT_BGRA8888; 
+    }
+      break;
+    case GPUPIXEL_FRAME_TYPE_YUVI420: {
+      input.pix_fmt = VNN_PIX_FMT_YUVI420;
+    }
+      break;
+    default:
+      break;
+  }
+
+  input.data = (VNNVoidPtr)data;
+  if(fmt == GPUPIXEL_MODE_FMT_VIDEO) {
+    input.mode_fmt = VNN_MODE_FMT_VIDEO;
+  }
+
+  if(fmt == GPUPIXEL_MODE_FMT_PICTURE) {
+      input.mode_fmt = VNN_MODE_FMT_PICTURE;
+  }
+
+  input.ori_fmt = VNN_ORIENT_FMT_DEFAULT;
+
+  VNN_FaceFrameDataArr output;
+  VNN_Result ret = VNN_Apply_Face_CPU(vnn_handle_, &input, &output);
+ 
   std::vector<float> landmarks;
-
-  mars_face_detector_->Detect(image, face_info);
-  if (face_info.size() > 0) {
-    for (int i = 0; i < face_info[0].landmarks.size(); i++) {
-      landmarks.push_back(face_info[0].landmarks[i].x / width);
-      landmarks.push_back(face_info[0].landmarks[i].y / height);
+  if(output.facesNum > 0) {
+    for (int i = 0; i < output.facesArr[0].faceLandmarksNum; i++) {
+      landmarks.push_back(output.facesArr[0].faceLandmarks[i].x);
+      landmarks.push_back(output.facesArr[0].faceLandmarks[i].y);
     }
 
-    // Calculate additional facial landmarks
-    // Landmark 106: Center point between points 102 and 98
-    auto point_x = (face_info[0].landmarks[102].x / width +
-                    face_info[0].landmarks[98].x / width) /
-                   2;
-    auto point_y = (face_info[0].landmarks[102].y / height +
-                    face_info[0].landmarks[98].y / height) /
-                   2;
+    // 106
+    auto point_x = (output.facesArr[0].faceLandmarks[102].x + output.facesArr[0].faceLandmarks[98].x)/2;
+    auto point_y = (output.facesArr[0].faceLandmarks[102].y + output.facesArr[0].faceLandmarks[98].y)/2;
+    landmarks.push_back(point_x);
+    landmarks.push_back(point_y);
+    
+    // 107
+    point_x = (output.facesArr[0].faceLandmarks[35].x + output.facesArr[0].faceLandmarks[65].x)/2;
+    point_y = (output.facesArr[0].faceLandmarks[35].y + output.facesArr[0].faceLandmarks[65].y)/2;
+    landmarks.push_back(point_x);
+    landmarks.push_back(point_y);
+    
+    
+    // 108
+    point_x = (output.facesArr[0].faceLandmarks[70].x + output.facesArr[0].faceLandmarks[40].x)/2;
+    point_y = (output.facesArr[0].faceLandmarks[70].y + output.facesArr[0].faceLandmarks[40].y)/2;
+    landmarks.push_back(point_x);
+    landmarks.push_back(point_y);
+    
+    // 109
+    point_x = (output.facesArr[0].faceLandmarks[5].x + output.facesArr[0].faceLandmarks[80].x)/2;
+    point_y = (output.facesArr[0].faceLandmarks[5].y + output.facesArr[0].faceLandmarks[80].y)/2;
     landmarks.push_back(point_x);
     landmarks.push_back(point_y);
 
-    // Landmark 107: Center point between points 35 and 65
-    point_x = (face_info[0].landmarks[35].x / width +
-               face_info[0].landmarks[65].x / width) /
-              2;
-    point_y = (face_info[0].landmarks[35].y / height +
-               face_info[0].landmarks[65].y / height) /
-              2;
-    landmarks.push_back(point_x);
-    landmarks.push_back(point_y);
-
-    // Landmark 108: Center point between points 70 and 40
-    point_x = (face_info[0].landmarks[70].x / width +
-               face_info[0].landmarks[40].x / width) /
-              2;
-    point_y = (face_info[0].landmarks[70].y / height +
-               face_info[0].landmarks[40].y / height) /
-              2;
-    landmarks.push_back(point_x);
-    landmarks.push_back(point_y);
-
-    // Landmark 109: Center point between points 5 and 80
-    point_x = (face_info[0].landmarks[5].x / width +
-               face_info[0].landmarks[80].x / width) /
-              2;
-    point_y = (face_info[0].landmarks[5].y / height +
-               face_info[0].landmarks[80].y / height) /
-              2;
-    landmarks.push_back(point_x);
-    landmarks.push_back(point_y);
-
-    // Landmark 110: Center point between points 81 and 27
-    point_x = (face_info[0].landmarks[81].x / width +
-               face_info[0].landmarks[27].x / width) /
-              2;
-    point_y = (face_info[0].landmarks[81].y / height +
-               face_info[0].landmarks[27].y / height) /
-              2;
+    // 110
+    point_x = (output.facesArr[0].faceLandmarks[81].x + output.facesArr[0].faceLandmarks[27].x)/2;
+    point_y = (output.facesArr[0].faceLandmarks[81].y + output.facesArr[0].faceLandmarks[27].y)/2;
     landmarks.push_back(point_x);
     landmarks.push_back(point_y);
   }

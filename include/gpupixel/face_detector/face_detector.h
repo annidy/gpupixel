@@ -10,10 +10,6 @@
 #include <vector>
 #include "gpupixel/gpupixel_define.h"
 
-namespace mars_face_kit {
-class MarsFaceDetector;
-}
-
 namespace gpupixel {
 
 class GPUPIXEL_API FaceDetector {
@@ -22,12 +18,13 @@ class GPUPIXEL_API FaceDetector {
   std::vector<float> Detect(const uint8_t* data,
                             int width,
                             int height,
-                            int stride,
                             GPUPIXEL_MODE_FMT fmt,
                             GPUPIXEL_FRAME_TYPE type);
+  ~FaceDetector();
 
  private:
   FaceDetector();
-  std::shared_ptr<mars_face_kit::MarsFaceDetector> mars_face_detector_;
+  uint32_t vnn_handle_;
+  int use_278pts = 0;
 };
 }  // namespace gpupixel

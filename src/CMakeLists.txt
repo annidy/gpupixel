@@ -224,8 +224,8 @@ set(lib_image_resource_files
     ${CMAKE_CURRENT_SOURCE_DIR}/res/lookup_skin.png)
 
 set(lib_models_resource_files
-    ${PROJECT_SOURCE_DIR}/third_party/mars-face-kit/models/face_align.mars_model
-    ${PROJECT_SOURCE_DIR}/third_party/mars-face-kit/models/face_det.mars_model)
+    ${PROJECT_SOURCE_DIR}/third_party/vnn/models/vnn_face278_data/face_mobile[1.0.0].vnnmodel
+    ${PROJECT_SOURCE_DIR}/third_party/vnn/models/vnn_face278_data/face_pc[1.0.0].vnnmodel)
 
 if(GPUPIXEL_AAPL_FMWK)
   foreach(hdr ${public_common_header_files})
@@ -338,8 +338,13 @@ if(WIN32)
     ${gpupixel_libs_name}
     PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
+  get_target_property(VNN_KIT_DLL_PATH vnn_kit IMPORTED_LOCATION)
+  get_target_property(VNN_CORE_DLL_PATH vnn_core IMPORTED_LOCATION)
+  get_target_property(VNN_FACE_DLL_PATH vnn_face IMPORTED_LOCATION)
   add_custom_command(TARGET ${gpupixel_libs_name} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:marsface,IMPORTED_LOCATION> ${CMAKE_BINARY_DIR}/out/lib
+    COMMAND ${CMAKE_COMMAND} -E copy ${VNN_KIT_DLL_PATH} ${CMAKE_BINARY_DIR}/out/lib
+    COMMAND ${CMAKE_COMMAND} -E copy ${VNN_CORE_DLL_PATH} ${CMAKE_BINARY_DIR}/out/lib
+    COMMAND ${CMAKE_COMMAND} -E copy ${VNN_FACE_DLL_PATH} ${CMAKE_BINARY_DIR}/out/lib
   )
 endif()
 
@@ -441,10 +446,11 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 endif()
 
 if(GPUPIXEL_ENABLE_FACE_DETECTOR)
-  target_link_libraries(${gpupixel_libs_name} PRIVATE marsface::marsface)
-  if(APPLE)
-    target_link_libraries(${gpupixel_libs_name} PRIVATE mnn)
-  endif()
+  target_link_libraries(${gpupixel_libs_name} PRIVATE vnn_core
+                                                      vnn_kit
+                                                      vnn_face)
+  target_include_directories(${gpupixel_libs_name} PRIVATE ${VNN_INCLUDE_DIRS})
+  message(STATUS "VNN_INCLUDE_DIRS: ${VNN_INCLUDE_DIRS}")
 endif()
 
 if(GPUPIXEL_INSTALL)
