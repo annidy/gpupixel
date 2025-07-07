@@ -9,7 +9,11 @@
 
 #include <vector>
 #include "gpupixel/gpupixel_define.h"
-
+#ifndef _WIN32
+namespace mars_vision {
+class MarsFaceLandmarker;
+}
+#endif
 namespace gpupixel {
 
 class GPUPIXEL_API FaceDetector {
@@ -25,7 +29,11 @@ class GPUPIXEL_API FaceDetector {
 
  private:
   FaceDetector();
+#ifdef _WIN32
   uint32_t vnn_handle_;
   int use_278pts = 0;
+#else
+  std::shared_ptr<mars_vision::MarsFaceLandmarker> mars_face_detector_;
+#endif
 };
 }  // namespace gpupixel

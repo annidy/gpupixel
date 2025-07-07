@@ -7,10 +7,15 @@
 
 #include "gpupixel/face_detector/face_detector.h"
 #include <cassert>
-
+#ifdef _WIN32
 #include "vnn_kit.h"
 #include "vnn_face.h"
 #include "ghc/filesystem.hpp"
+#else
+#include "mars_vision/mars_defines.h"
+#include "mars_vision/mars_face_landmarker.h"
+#endif
+#include "utils/filesystem.h"
 #include "utils/logging.h"
 #include "utils/util.h"
 
@@ -19,19 +24,17 @@ namespace gpupixel {
 std::shared_ptr<FaceDetector> FaceDetector::Create() {
   return std::shared_ptr<FaceDetector>(new FaceDetector());
 }
-
+#ifdef _WIN32
 FaceDetector::FaceDetector() {
   auto path = Util::GetResourcePath() / "models";
-
   VNN_SetLogLevel(VNN_LOG_LEVEL_ALL);
 #if defined(GPUPIXEL_IOS) || defined(GPUPIXEL_ANDROID)
   auto model_path = path / "face_mobile[1.0.0].vnnmodel";
 #elif defined(GPUPIXEL_WIN) || defined(GPUPIXEL_MAC) || defined(GPUPIXEL_LINUX)
   auto model_path = path / "face_pc[1.0.0].vnnmodel";
 #endif
-  auto u8_path = model_path.u8string();
   const void* argv[] = {
-      u8_path.c_str(),
+      model_path.string().c_str(),
   };
 
   const int argc = sizeof(argv) / sizeof(argv[0]);
@@ -44,17 +47,16 @@ FaceDetector::~FaceDetector() {
 }
 
 std::vector<float> FaceDetector::Detect(const uint8_t* data,
-                    int width,
-                    int height,
-                    int stride,
-                    GPUPIXEL_MODE_FMT fmt,
-                    GPUPIXEL_FRAME_TYPE type) {
+                                        int width,
+                                        int height,
+                                        int stride,
+                                        GPUPIXEL_MODE_FMT fmt,
+                                        GPUPIXEL_FRAME_TYPE type) {
   if(vnn_handle_ == 0) {
     return {};
   }
-  
-  VNN_Set_Face_Attr(vnn_handle_, "_use_278pts", &use_278pts);
 
+  VNN_Set_Face_Attr(vnn_handle_, "_use_278pts", &use_278pts);
   VNN_Image input;
   input.width = width;
   input.height = height;
@@ -64,10 +66,6 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
       input.pix_fmt = VNN_PIX_FMT_RGBA8888; 
     }
       break;
-    case GPUPIXEL_FRAME_TYPE_YUVI420: {
-      input.pix_fmt = VNN_PIX_FMT_YUVI420;
-    }
-      break;
     case GPUPIXEL_FRAME_TYPE_BGRA: {
       input.pix_fmt = VNN_PIX_FMT_BGRA8888;
     }
@@ -75,7 +73,6 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
     default:
       break;
   }
-
   input.data = (VNNVoidPtr)data;
   if(fmt == GPUPIXEL_MODE_FMT_VIDEO) {
     input.mode_fmt = VNN_MODE_FMT_VIDEO;
@@ -96,7 +93,6 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
       landmarks.push_back(output.facesArr[0].faceLandmarks[i].x);
       landmarks.push_back(output.facesArr[0].faceLandmarks[i].y);
     }
-
     // 106
     auto point_x = (output.facesArr[0].faceLandmarks[102].x + output.facesArr[0].faceLandmarks[98].x)/2;
     auto point_y = (output.facesArr[0].faceLandmarks[102].y + output.facesArr[0].faceLandmarks[98].y)/2;
@@ -121,7 +117,6 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
     point_y = (output.facesArr[0].faceLandmarks[5].y + output.facesArr[0].faceLandmarks[80].y)/2;
     landmarks.push_back(point_x);
     landmarks.push_back(point_y);
-
     // 110
     point_x = (output.facesArr[0].faceLandmarks[81].x + output.facesArr[0].faceLandmarks[27].x)/2;
     point_y = (output.facesArr[0].faceLandmarks[81].y + output.facesArr[0].faceLandmarks[27].y)/2;
@@ -131,5 +126,56 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
 
   return landmarks;
 }
+#else
+FaceDetector::FaceDetector() {
+  auto path = Util::GetResourcePath() / "models";
 
+  if (fs::exists(path)) {
+    mars_face_detector_ = mars_vision::MarsFaceLandmarker::Create();
+
+    mars_vision::FaceLandmarkerOptions landmarkerOptions;
+    landmarkerOptions.model_path = path.string();
+    landmarkerOptions.running_mode = mars_vision::RunningMode::VIDEO;
+
+    mars_face_detector_->Init(landmarkerOptions);
+  } else {
+    LOG_ERROR("FaceDetector: models path not found: {}", path.string());
+    assert(false && "FaceDetector: models path not found");
+  }
+}
+
+std::vector<float> FaceDetector::Detect(const uint8_t* data,
+                                        int width,
+                                        int height,
+                                        int stride,
+                                        GPUPIXEL_MODE_FMT fmt,
+                                        GPUPIXEL_FRAME_TYPE type) {
+  mars_vision::MarsImage image;
+  image.data = (uint8_t*)data;
+  image.width = width == stride / 4 ? width : stride / 4;
+  image.height = height;
+  if (type == GPUPIXEL_FRAME_TYPE_RGBA) {
+    image.format = mars_vision::MarsImageFormat::RGBA;
+  } else if (type == GPUPIXEL_FRAME_TYPE_BGRA) {
+    image.format = mars_vision::MarsImageFormat::BGRA;
+  }
+  image.stride = stride;
+  image.rotate_type = mars_vision::RotateType::CLOCKWISE_0;
+  image.timestamp = 0;
+
+  std::vector<mars_vision::FaceLandmarkerResult> face_results;
+  std::vector<float> landmarks;
+
+  mars_face_detector_->Detect(image, face_results);
+  // only support one face
+  for (auto& result : face_results) {
+    for (auto& point : result.key_points) {
+      landmarks.push_back(point.x / width);
+      landmarks.push_back(point.y / height);
+    }
+  }
+
+  return landmarks;
+}
+#endif
 }  // namespace gpupixel

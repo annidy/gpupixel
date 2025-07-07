@@ -211,8 +211,8 @@ using namespace gpupixel;
   }
 
   gpupixel::GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
-    glBindFramebuffer(GL_FRAMEBUFFER, displayFramebuffer);
-    glViewport(0, 0, framebufferWidth, framebufferHeight);
+      glBindFramebuffer(GL_FRAMEBUFFER, displayFramebuffer);
+      glViewport(0, 0, framebufferWidth, framebufferHeight);
   });
 #else
   gpupixel::GPUPixelContext::GetInstance()->SyncRunWithContext([&] {

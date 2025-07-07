@@ -79,7 +79,6 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
               dl
               glad::glad
               glfw::glfw
-              marsface::marsface
               gpupixel::gpupixel
               ghc::filesystem
               stdc++fs)
