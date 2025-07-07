@@ -15,8 +15,9 @@ ENDIF()
 # ---- vnn library configuration ----
 # Configure the face detection and tracking library for all platforms
 set(VNN_LIB_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS})
+set(VNN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/vnn/include PARENT_SCOPE)
+
 if(GPUPIXEL_ENABLE_FACE_DETECTOR)
-  set(VNN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/vnn/include PARENT_SCOPE)
   if(${CMAKE_SYSTEM_NAME} MATCHES "Android")
     add_library(vnn_kit SHARED IMPORTED)
     set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION
@@ -30,49 +31,55 @@ if(GPUPIXEL_ENABLE_FACE_DETECTOR)
     set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION
     ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/${ANDROID_ABI}/libvnn_face.so)
   elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    add_library(vnn_kit SHARED IMPORTED GLOBAL)
-    set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_kit.dll
-    IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_kit.lib)
+    if(GPUPIXEL_ENABLE_VNN)
+      add_library(vnn_kit SHARED IMPORTED GLOBAL)
+      set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION
+      ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_kit.dll
+      IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_kit.lib)
 
-    add_library(vnn_core SHARED IMPORTED GLOBAL)
-    set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_core.dll
-    IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_core.lib)
+      add_library(vnn_core SHARED IMPORTED GLOBAL)
+      set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION
+      ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_core.dll
+      IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_core.lib)
 
-    add_library(vnn_face SHARED IMPORTED GLOBAL)
-    set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_face.dll
-    IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_face.lib)
+      add_library(vnn_face SHARED IMPORTED GLOBAL)
+      set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION
+      ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_face.dll
+      IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/x64/vnn_face.lib)
+    endif()
   elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    add_library(vnn_kit SHARED IMPORTED)
-    set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/libvnn_kit.so)
+    if(GPUPIXEL_ENABLE_VNN)
+      add_library(vnn_kit SHARED IMPORTED)
+      set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION
+      ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/libvnn_kit.so)
 
-    add_library(vnn_face SHARED IMPORTED)
-    set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/libvnn_face.so)
+      add_library(vnn_face SHARED IMPORTED)
+      set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION
+      ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/libvnn_face.so)
 
-    add_library(vnn_core SHARED IMPORTED)
-    set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION
-    ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/libvnn_core.so)
+      add_library(vnn_core SHARED IMPORTED)
+      set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION
+      ${CMAKE_CURRENT_SOURCE_DIR}/vnn/libs/${CURRENT_OS}/libvnn_core.so)
+    endif()
 
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
   elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR ${CMAKE_SYSTEM_NAME} MATCHES "iOS")
-    message(STATUS "Configuring vnn for ${VNN_LIB_DIRS}")
-    find_library(vnn_kit_lib vnn_kit_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
-    find_library(vnn_face_lib vnn_face_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
-    find_library(vnn_core_lib vnn_core_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
-    if(NOT vnn_kit_lib)
-      message(FATAL_ERROR "vnn_kit library not found in ${VNN_LIB_DIRS}")
-    endif()
+    if(GPUPIXEL_ENABLE_VNN)
+      message(STATUS "Configuring vnn for ${VNN_LIB_DIRS}")
+      find_library(vnn_kit_lib vnn_kit_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
+      find_library(vnn_face_lib vnn_face_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
+      find_library(vnn_core_lib vnn_core_osx PATHS ${VNN_LIB_DIRS} NO_DEFAULT_PATH)
+      if(NOT vnn_kit_lib)
+        message(FATAL_ERROR "vnn_kit library not found in ${VNN_LIB_DIRS}")
+      endif()
 
-    add_library(vnn_kit SHARED IMPORTED GLOBAL)
-    set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION ${vnn_core_lib})
-    add_library(vnn_core SHARED IMPORTED GLOBAL)
-    set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION ${vnn_kit_lib})
-    add_library(vnn_face SHARED IMPORTED GLOBAL)
-    set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION ${vnn_face_lib})
+      add_library(vnn_kit SHARED IMPORTED GLOBAL)
+      set_target_properties(vnn_kit PROPERTIES IMPORTED_LOCATION ${vnn_core_lib})
+      add_library(vnn_core SHARED IMPORTED GLOBAL)
+      set_target_properties(vnn_core PROPERTIES IMPORTED_LOCATION ${vnn_kit_lib})
+      add_library(vnn_face SHARED IMPORTED GLOBAL)
+      set_target_properties(vnn_face PROPERTIES IMPORTED_LOCATION ${vnn_face_lib})
+    endif()
   endif()
 
   # ---- Runtime library installation ----

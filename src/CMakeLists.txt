@@ -448,10 +448,12 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 endif()
 
 if(GPUPIXEL_ENABLE_FACE_DETECTOR)
-  target_link_libraries(${gpupixel_libs_name} PRIVATE vnn_core
-                                                      vnn_kit
-                                                      vnn_face)
-  target_include_directories(${gpupixel_libs_name} PRIVATE ${VNN_INCLUDE_DIRS})
+  if (GPUPIXEL_ENABLE_VNN)
+    target_link_libraries(${gpupixel_libs_name} PRIVATE vnn_core
+                                                        vnn_kit
+                                                        vnn_face)
+    target_include_directories(${gpupixel_libs_name} PRIVATE ${VNN_INCLUDE_DIRS})
+  endif()
 endif()
 
 if(GPUPIXEL_INSTALL)

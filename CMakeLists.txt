@@ -27,6 +27,11 @@ if(GPUPIXEL_ENABLE_FACE_DETECTOR)
   add_compile_definitions(GPUPIXEL_ENABLE_FACE_DETECTOR)
 endif()
 
+option(GPUPIXEL_ENABLE_VNN "Enable vnn library" ON)
+if(GPUPIXEL_ENABLE_VNN)
+  add_compile_definitions(GPUPIXEL_ENABLE_VNN)
+endif()
+
 option(GPUPIXEL_EXTERNAL_CODE "Build with external code" OFF)
 
 option(GPUPIXEL_INSTALL "Generate the install target" ON)
@@ -81,6 +86,7 @@ if(APPLE)
 endif()
 message(
   STATUS "GPUPIXEL_ENABLE_FACE_DETECTOR: ${GPUPIXEL_ENABLE_FACE_DETECTOR}")
+message(STATUS "GPUPIXEL_ENABLE_VNN: ${GPUPIXEL_ENABLE_VNN}")
 message(STATUS "GPUPIXEL_BUILD_DESKTOP_DEMO: ${GPUPIXEL_BUILD_DESKTOP_DEMO}")
 
 # ---- System information ----

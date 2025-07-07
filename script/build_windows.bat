@@ -21,7 +21,8 @@ echo Configuring Windows project...
 cmake -B "%BUILD_DIR%" -S . ^
   -DCMAKE_BUILD_TYPE=Release ^
   -DGPUPIXEL_BUILD_DESKTOP_DEMO=ON ^
-  -DGPUPIXEL_ENABLE_FACE_DETECTOR=OFF ^
+  -DGPUPIXEL_ENABLE_FACE_DETECTOR=ON ^
+  -DGPUPIXEL_ENABLE_VNN=ON ^
   -DCMAKE_INSTALL_PREFIX="%INSTALL_DIR%"
 if errorlevel 1 (
     echo Error: Project configuration failed

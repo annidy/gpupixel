@@ -7,7 +7,7 @@
 
 #include "gpupixel/face_detector/face_detector.h"
 #include <cassert>
-#ifdef _WIN32
+#ifdef GPUPIXEL_ENABLE_VNN
 #include "vnn_kit.h"
 #include "vnn_face.h"
 #include "ghc/filesystem.hpp"
@@ -24,7 +24,7 @@ namespace gpupixel {
 std::shared_ptr<FaceDetector> FaceDetector::Create() {
   return std::shared_ptr<FaceDetector>(new FaceDetector());
 }
-#ifdef _WIN32
+#ifdef GPUPIXEL_ENABLE_VNN
 FaceDetector::FaceDetector() {
   auto path = Util::GetResourcePath() / "models";
   VNN_SetLogLevel(VNN_LOG_LEVEL_ALL);
@@ -33,12 +33,13 @@ FaceDetector::FaceDetector() {
 #elif defined(GPUPIXEL_WIN) || defined(GPUPIXEL_MAC) || defined(GPUPIXEL_LINUX)
   auto model_path = path / "face_pc[1.0.0].vnnmodel";
 #endif
-  const void* argv[] = {
-      model_path.string().c_str(),
+  auto pathstr = model_path.u8string();
+  const char* argv[] = {
+      pathstr.c_str(),
   };
-
+  LOG_INFO("model path: {}", (char*)argv[0]);
   const int argc = sizeof(argv) / sizeof(argv[0]);
-  VNN_Result ret = VNN_Create_Face(&vnn_handle_, argc, argv);
+  VNN_Result ret = VNN_Create_Face(&vnn_handle_, argc, (const void**)argv);
 }
 
 FaceDetector::~FaceDetector() {
@@ -79,7 +80,7 @@ std::vector<float> FaceDetector::Detect(const uint8_t* data,
   }
 
   if(fmt == GPUPIXEL_MODE_FMT_PICTURE) {
-      input.mode_fmt = VNN_MODE_FMT_PICTURE;
+    input.mode_fmt = VNN_MODE_FMT_PICTURE;
   }
 
   input.ori_fmt = VNN_ORIENT_FMT_DEFAULT;
