@@ -64,17 +64,17 @@ using namespace gpupixel;
 {
   inputRotation = gpupixel::NoRotation;
 #if defined(GPUPIXEL_IOS)
-  self.opaque = YES;
+  self.opaque = NO;
   self.hidden = NO;
   CAEAGLLayer* eaglLayer = (CAEAGLLayer*)self.layer;
-  eaglLayer.opaque = YES;
+  eaglLayer.opaque = NO;
   eaglLayer.drawableProperties = [NSDictionary
       dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO],
                                    kEAGLDrawablePropertyRetainedBacking,
                                    kEAGLColorFormatRGBA8,
                                    kEAGLDrawablePropertyColorFormat, nil];
   currentlayer = (CAEAGLLayer*)self.layer;
-  currentlayer.opaque = YES;
+  currentlayer.opaque = NO;
   currentlayer.drawableProperties = [NSDictionary
       dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO],
                                    kEAGLDrawablePropertyRetainedBacking,
@@ -171,9 +171,7 @@ using namespace gpupixel;
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT,
                                  &framebufferHeight);
 
-    [self performSelectorOnMainThread:@selector(updateDisplayVertices)
-                           withObject:nil
-                        waitUntilDone:NO];
+    [self updateDisplayVertices];
 #else
     // Perhaps I'll use an FBO at some time later, but for now will render
     // directly to the screen
@@ -213,8 +211,8 @@ using namespace gpupixel;
   }
 
   gpupixel::GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
-    glBindFramebuffer(GL_FRAMEBUFFER, displayFramebuffer);
-    glViewport(0, 0, framebufferWidth, framebufferHeight);
+      glBindFramebuffer(GL_FRAMEBUFFER, displayFramebuffer);
+      glViewport(0, 0, framebufferWidth, framebufferHeight);
   });
 #else
   gpupixel::GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
@@ -297,9 +295,7 @@ using namespace gpupixel;
        !(lastFramebuffer->GetWidth() == newInputFramebuffer->GetWidth() &&
          lastFramebuffer->GetHeight() == newInputFramebuffer->GetHeight() &&
          lastInputRotation == rotation))) {
-    [self performSelectorOnMainThread:@selector(updateDisplayVertices)
-                           withObject:nil
-                        waitUntilDone:NO];
+    [self updateDisplayVertices];
   }
 }
 
